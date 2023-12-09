@@ -13,46 +13,53 @@ namespace EventBookingAPI.Data
             _config = config;
         }
 
-        public IEnumerable<T> LoadData<T>(string sql)
+        private async Task<SqlConnection> GetOpenConnectionAsync()
         {
-            IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            return dbConnection.Query<T>(sql);
+            SqlConnection dbConnection = new(_config.GetConnectionString("DefaultConnection"));
+            await dbConnection.OpenAsync();
+            return dbConnection;
         }
 
-        public T LoadDataSingle<T>(string sql)
+        public async Task<IEnumerable<T>> LoadDataAsync<T>(string sql)
         {
-            IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            return dbConnection.QuerySingle<T>(sql);
+            using SqlConnection dbConnection = await GetOpenConnectionAsync();
+            return await dbConnection.QueryAsync<T>(sql);
         }
 
-        public bool ExecuteSql(string sql)
+        public async Task<T> LoadDataSingleAsync<T>(string sql)
         {
-            IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            return dbConnection.Execute(sql) > 0;
+            using SqlConnection dbConnection = await GetOpenConnectionAsync();
+            return await dbConnection.QuerySingleAsync<T>(sql);
         }
 
-        public int ExecuteSqlWithRowCount(string sql)
+        public async Task<bool> ExecuteSqlAsync(string sql)
         {
-            IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            return dbConnection.Execute(sql);
+            using SqlConnection dbConnection = await GetOpenConnectionAsync();
+            return await dbConnection.ExecuteAsync(sql) > 0;
         }
 
-        public bool ExecuteSqlWithParameters(string sql, DynamicParameters parameters)
+        public async Task<int> ExecuteSqlWithRowCountAsync(string sql)
         {
-            IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            return dbConnection.Execute(sql, parameters) > 0;
+            using SqlConnection dbConnection = await GetOpenConnectionAsync();
+            return await dbConnection.ExecuteAsync(sql);
         }
 
-        public IEnumerable<T> LoadDataWithParameters<T>(string sql, DynamicParameters parameters)
+        public async Task<bool> ExecuteSqlWithParametersAsync(string sql, DynamicParameters parameters)
         {
-            IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            return dbConnection.Query<T>(sql, parameters);
+            using SqlConnection dbConnection = await GetOpenConnectionAsync();
+            return await dbConnection.ExecuteAsync(sql, parameters) > 0;
         }
 
-        public T LoadDataSingleWithParameters<T>(string sql, DynamicParameters parameters)
+        public async Task<IEnumerable<T>> LoadDataWithParametersAsync<T>(string sql, DynamicParameters parameters)
         {
-            IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            return dbConnection.QuerySingle<T>(sql, parameters);
+            using SqlConnection dbConnection = await GetOpenConnectionAsync();
+            return await dbConnection.QueryAsync<T>(sql, parameters);
+        }
+
+        public async Task<T> LoadDataSingleWithParametersAsync<T>(string sql, DynamicParameters parameters)
+        {
+            using SqlConnection dbConnection = await GetOpenConnectionAsync();
+            return await dbConnection.QuerySingleAsync<T>(sql, parameters);
         }
     }
 }
