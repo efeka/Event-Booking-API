@@ -121,7 +121,7 @@ namespace EventBookingAPI.Controllers
                 if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
                     return Ok();
                 else
-                    return BadRequest("Failed to update role");
+                    return BadRequest($"Failed to update role with ID {roleId}");
             }
             catch (SqlException)
             {
@@ -129,7 +129,7 @@ namespace EventBookingAPI.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Failed to update role");
+                return BadRequest($"Failed to update role with ID {roleId}");
             }
         }
     }
