@@ -16,18 +16,18 @@ namespace EventBookingAPI.Controllers
         }
 
         [HttpGet("TestConnection")]
-        public DateTime TestConnection()
+        public async Task<DateTime> TestConnectionAsync()
         {
-            return _dapper.LoadDataSingle<DateTime>("SELECT GETDATE()");
+            return await _dapper.LoadDataSingleAsync<DateTime>("SELECT GETDATE()");
         }
 
         [HttpGet]
-        public IEnumerable<User> GetUsers()
+        public async Task<IEnumerable<User>> GetUsers()
         {
             string sql = @"
-            SELECT *
-            FROM EventBookingSchema.Users";
-            return _dapper.LoadData<User>(sql);
+                SELECT *
+                FROM EventBookingSchema.Users";
+            return await _dapper.LoadDataAsync<User>(sql);
         }
 
     }
