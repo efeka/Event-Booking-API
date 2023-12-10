@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using EventBookingAPI.Data;
 using EventBookingAPI.Models;
+using EventBookingAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 
@@ -11,165 +12,93 @@ namespace EventBookingAPI.Controllers
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
-        private readonly DataContextDapper _dapper;
+        private readonly IUserService _userService;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(IConfiguration config)
+        public UserController(IUserService userService, ILogger<UserController> logger)
         {
-            _dapper = new(config);
-        }
-
-        [HttpGet("TestConnection")]
-        public async Task<DateTime> TestConnectionAsync()
-        {
-            return await _dapper.LoadDataSingleAsync<DateTime>("SELECT GETDATE()");
+            _userService = userService;
+            _logger = logger;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUsers()
+        public async Task<ActionResult<IEnumerable<User>>> GetUsersAsync()
         {
-            string sql = @"
-                SELECT *
-                FROM EventBookingSchema.Users";
-
             try
             {
-                IEnumerable<User> users = await _dapper.LoadDataAsync<User>(sql);
+                IEnumerable<User> users = await _userService.GetUsersAsync();
                 return Ok(users);
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
+                _logger.LogError(ex, "An error occurred while getting users.");
                 return NotFound("Could not retrieve users");
             }
         }
 
         [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUsers(int userId)
+        public async Task<ActionResult<User>> GetUserAsync(int userId)
         {
-            string sql = @"
-                SELECT *
-                FROM EventBookingSchema.Users
-                WHERE UserId = @UserIdParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
-
             try
             {
-                IEnumerable<User> users = await _dapper.LoadDataWithParametersAsync<User>(sql, sqlParameters);
-                return Ok(users);
+                User user = await _userService.GetUserAsync(userId);
+                return Ok(user);
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return NotFound("Could not retrieve user");
+                _logger.LogError(ex, "An error occurred while getting the user.");
+                return NotFound($"An error occurred while getting the user with ID {userId}.");
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> AddUserAsync(UserToAddDto user)
         {
-            string sql = @"
-                INSERT INTO EventBookingSchema.Users (
-                    RoleId,
-                    FirstName,
-                    LastName,
-                    Email
-                ) VALUES (
-                    @RoleIdParam,
-                    @FirstNameParam,
-                    @LastNameParam,
-                    @EmailParam
-                )";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@RoleIdParam", user.RoleId, DbType.Int32);
-            sqlParameters.Add("@FirstNameParam", user.FirstName, DbType.String);
-            sqlParameters.Add("@LastNameParam", user.LastName, DbType.String);
-            sqlParameters.Add("@EmailParam", user.Email, DbType.String);
-
             try
             {
-                if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
+                if (await _userService.AddUserAsync(user))
                     return Ok();
                 else
-                    return BadRequest("Failed to insert user");
+                    return BadRequest("An error occurred while inserting a user.");
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return BadRequest("Failed to insert user");
+                _logger.LogError(ex, "An error occurred while inserting a user.");
+                return BadRequest("An error occurred while inserting a user.");
             }
         }
 
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUserAsync(UserToAddDto user, int userId)
         {
-            string sql = @"
-                UPDATE EventBookingSchema.Users
-                SET RoleId = @RoleIdParam,
-                    FirstName = @FirstNameParam,
-                    LastName = @LastNameParam,
-                    Email = @EmailParam
-                WHERE UserId = @UserIdParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
-            sqlParameters.Add("@RoleIdParam", user.RoleId, DbType.Int32);
-            sqlParameters.Add("@FirstNameParam", user.FirstName, DbType.String);
-            sqlParameters.Add("@LastNameParam", user.LastName, DbType.String);
-            sqlParameters.Add("@EmailParam", user.Email, DbType.String);
-
             try
             {
-                if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
+                if (await _userService.UpdateUserAsync(user, userId))
                     return Ok();
                 else
-                    return BadRequest($"Failed to update user with ID {userId}");
+                    return BadRequest($"An error occurred while updating the user with ID {userId}");
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to update user with ID {userId}");
+                _logger.LogError(ex, "An error occurred while updating a user.");
+                return BadRequest($"An error occurred while updating the user with ID {userId}");
             }
         }
 
         [HttpDelete("{userId}")]
         public async Task<IActionResult> DeleteUserAsync(int userId)
         {
-            string sql = @"
-                DELETE FROM EventBookingSchema.Users
-                WHERE UserId = @UserIdParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
-
             try
             {
-                if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
+                if (await _userService.DeleteUserAsync(userId))
                     return Ok();
                 else
-                    return BadRequest($"Failed to delete user with ID {userId}");
+                    return BadRequest($"An error occurred while deleting the user with ID {userId}");
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to delete user with ID {userId}");
+                _logger.LogError(ex, "An error occurred while deleting a user.");
+                return BadRequest($"An error occurred while deleting the user with ID {userId}");
             }
         }
 
