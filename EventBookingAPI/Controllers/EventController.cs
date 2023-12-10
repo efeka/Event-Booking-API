@@ -18,7 +18,7 @@ namespace EventBookingAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetEventsAsync()
+        public async Task<ActionResult<IEnumerable<Event>>> GetEventsAsync()
         {
             try
             {
@@ -33,7 +33,7 @@ namespace EventBookingAPI.Controllers
         }
 
         [HttpGet("{eventId}")]
-        public async Task<IActionResult> GetEventByIdAsync(int eventId)
+        public async Task<ActionResult<Event>> GetEventByIdAsync(int eventId)
         {
             try
             {

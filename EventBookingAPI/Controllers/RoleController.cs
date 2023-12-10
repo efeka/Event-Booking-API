@@ -1,11 +1,7 @@
-using System.Data;
-using Dapper;
-using EventBookingAPI.Data;
 using EventBookingAPI.Dtos;
 using EventBookingAPI.Models;
+using EventBookingAPI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Logging;
 
 namespace EventBookingAPI.Controllers
 {
@@ -13,123 +9,76 @@ namespace EventBookingAPI.Controllers
     [Route("[controller]")]
     public class RoleController : ControllerBase
     {
-        private readonly DataContextDapper _dapper;
+        private readonly IRoleService _roleService;
+        private readonly ILogger<EventController> _logger;
 
-        public RoleController(IConfiguration config)
+        public RoleController(IRoleService roleService, ILogger<EventController> logger)
         {
-            _dapper = new(config);
+            _roleService = roleService;
+            _logger = logger;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetRolesAsync()
+        public async Task<ActionResult<IEnumerable<Role>>> GetRolesAsync()
         {
-            string sql = @"
-                SELECT *
-                FROM EventBookingSchema.Roles";
-
             try
             {
-                IEnumerable<Role> roles = await _dapper.LoadDataAsync<Role>(sql);
+                IEnumerable<Role> roles = await _roleService.GetRolesAsync();
                 return Ok(roles);
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return NotFound("Could not retrieve roles");
+                _logger.LogError(ex, "An error occurred while getting events.");
+                return NotFound("Could not retrieve events.");
             }
         }
 
         [HttpGet("{roleId}")]
-        public async Task<IActionResult> GetRoleByIdAsync(int roleId)
+        public async Task<ActionResult<Role>> GetRoleByIdAsync(int roleId)
         {
-            string sql = @"
-                SELECT *
-                FROM EventBookingSchema.Roles
-                WHERE RoleId = @RoleIdParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@RoleIdParam", roleId, DbType.String);
-
             try
             {
-                Role role = await _dapper.LoadDataSingleWithParametersAsync<Role>(sql, sqlParameters);
+                Role role = await _roleService.GetRoleByIdAsync(roleId);
                 return Ok(role);
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return NotFound($"Could not find Role with ID {roleId}");
+                _logger.LogError(ex, "An error occurred while getting a role.");
+                return BadRequest($"An error occurred while getting the role with ID {roleId}.");
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> AddRoleAsync(RoleToAddDto role)
         {
-            if (string.IsNullOrEmpty(role?.RoleName))
-                return BadRequest("RoleName cannot be null or empty");
-
-            string sql = @"
-                INSERT INTO EventBookingSchema.Roles (
-                    RoleName
-                ) VALUES (
-                    @RoleNameParam
-                )";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@RoleNameParam", role.RoleName, DbType.String);
-
             try
             {
-                if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
+                if (await _roleService.AddRoleAsync(role))
                     return Ok();
                 else
-                    return BadRequest("Failed to insert role");
+                    return BadRequest($"An error occurred while inserting a role.");
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return BadRequest("Failed to insert role");
+                _logger.LogError(ex, "An error occurred while inserting a role.");
+                return BadRequest($"An error occurred while inserting a role.");
             }
         }
 
         [HttpPut("{roleId}")]
         public async Task<IActionResult> UpdateRoleAsync(RoleToAddDto role, int roleId)
         {
-            if (string.IsNullOrEmpty(role?.RoleName))
-                return BadRequest("RoleName cannot be null or empty");
-
-            string sql = @"
-                UPDATE EventBookingSchema.Roles
-                SET RoleName = @RoleNameParam
-                WHERE RoleId = @RoleIdParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@RoleIdParam", roleId, DbType.Int32);
-            sqlParameters.Add("@RoleNameParam", role.RoleName, DbType.String);
-
             try
             {
-                if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
+                if (await _roleService.UpdateRoleAsync(role, roleId))
                     return Ok();
                 else
-                    return BadRequest($"Failed to update role with ID {roleId}");
+                    return BadRequest($"An error occurred while updating the role with ID {roleId}");
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to update role with ID {roleId}");
+                _logger.LogError(ex, "An error occurred while updating a role.");
+                return BadRequest($"An error occurred while updating the role with ID {roleId}");
             }
         }
     }

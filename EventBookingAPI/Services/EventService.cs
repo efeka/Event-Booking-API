@@ -9,9 +9,9 @@ namespace EventBookingAPI.Services
     public class EventService : IEventService
     {
         private readonly DataContextDapper _dapper;
-        private readonly ILogger<UserService> _logger;
+        private readonly ILogger<EventService> _logger;
 
-        public EventService(IConfiguration config, ILogger<UserService> logger)
+        public EventService(IConfiguration config, ILogger<EventService> logger)
         {
             _dapper = new(config);
             _logger = logger;

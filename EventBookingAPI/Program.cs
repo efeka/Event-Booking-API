@@ -1,11 +1,5 @@
 using EventBookingAPI.Controllers;
 using EventBookingAPI.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 public class Program
 {
@@ -19,12 +13,15 @@ public class Program
         // Dependency injection for services
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IEventService, EventService>();
+        builder.Services.AddScoped<IRoleService, RoleService>();
         // Dependency injection for logger
         builder.Services.AddLogging(configure => configure.AddConsole());
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<UserController>();
         builder.Services.AddScoped<EventService>();
         builder.Services.AddScoped<EventController>();
+        builder.Services.AddScoped<RoleService>();
+        builder.Services.AddScoped<RoleController>();
 
         // Add logging services with a default configuration
         builder.Services.AddLogging();
