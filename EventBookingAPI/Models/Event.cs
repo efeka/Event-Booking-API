@@ -1,5 +1,3 @@
-using EventBookingAPI.Data;
-
 namespace EventBookingAPI.Models
 {
     public class Event
