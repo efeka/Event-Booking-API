@@ -1,9 +1,6 @@
-using System.Data;
-using Dapper;
-using EventBookingAPI.Data;
 using EventBookingAPI.Models;
+using EventBookingAPI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 
 namespace EventBookingAPI.Controllers
 {
@@ -11,31 +8,26 @@ namespace EventBookingAPI.Controllers
     [Route("[controller]")]
     public class EventController : ControllerBase
     {
-        private readonly DataContextDapper _dapper;
+        private readonly IEventService _eventService;
+        private readonly ILogger<EventController> _logger;
 
-        public EventController(IConfiguration config)
+        public EventController(IEventService eventService, ILogger<EventController> logger)
         {
-            _dapper = new(config);
+            _eventService = eventService;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetEventsAsync()
         {
-            string sql = @"
-                SELECT *
-                FROM EventBookingSchema.Events";
-
             try
             {
-                IEnumerable<Event> events = await _dapper.LoadDataAsync<Event>(sql);
+                IEnumerable<Event> events = await _eventService.GetEventsAsync();
                 return Ok(events);
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
+                _logger.LogError(ex, "An error occurred while getting events.");
                 return NotFound("Could not retrieve events");
             }
         }
@@ -43,120 +35,66 @@ namespace EventBookingAPI.Controllers
         [HttpGet("{eventId}")]
         public async Task<IActionResult> GetEventByIdAsync(int eventId)
         {
-            string sql = @"
-                SELECT *
-                FROM EventBookingSchema.Events
-                WHERE EventId = @EventIdParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@EventIdParam", eventId, DbType.Int32);
-
             try
             {
-                Event evnt = await _dapper.LoadDataSingleWithParametersAsync<Event>(sql, sqlParameters);
+                Event evnt = await _eventService.GetEventByIdAsync(eventId);
                 return Ok(evnt);
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return NotFound($"Could not find Event with ID {eventId}");
+                _logger.LogError(ex, "An error occurred while getting an event.");
+                return NotFound($"An error occurred while getting the event with ID {eventId}.");
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> AddEventAsync(EventToAddDto eventToAdd)
         {
-            string sql = @"
-                EXEC EventBookingSchema.spEvents_Insert
-                    @OrganizerId = @OrganizerIdParam,
-                    @Title = @TitleParam,
-                    @Description = @DescriptionParam,
-                    @StartDate = @StartDateParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@OrganizerIdParam", eventToAdd.OrganizerId, DbType.Int32);
-            sqlParameters.Add("@TitleParam", eventToAdd.Title, DbType.String);
-            sqlParameters.Add("@DescriptionParam", eventToAdd.Description, DbType.String);
-            sqlParameters.Add("@StartDateParam", eventToAdd.StartDate, DbType.DateTime);
-
             try
             {
-                if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
+                if (await _eventService.AddEventAsync(eventToAdd))
                     return Ok();
                 else
-                    return BadRequest("Failed to insert event");
+                    return BadRequest("An error occurred while inserting an event.");
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return BadRequest("Failed to insert event");
+                _logger.LogError(ex, "An error occurred while inserting an event.");
+                return BadRequest("An error occurred while inserting an event.");
             }
         }
 
         [HttpPut("{eventId}")]
         public async Task<IActionResult> UpdateEventAsync(EventToAddDto eventToAdd, int eventId)
         {
-            string sql = @"
-                EXEC EventBookingSchema.spEvents_Update
-                    @EventId = @EventIdParam,
-                    @OrganizerId = @OrganizerIdParam,
-                    @Title = @TitleParam,
-                    @Description = @DescriptionParam,
-                    @StartDate = @StartDateParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@EventIdParam", eventId, DbType.Int32);
-            sqlParameters.Add("@OrganizerIdParam", eventToAdd.OrganizerId, DbType.Int32);
-            sqlParameters.Add("@TitleParam", eventToAdd.Title, DbType.String);
-            sqlParameters.Add("@DescriptionParam", eventToAdd.Description, DbType.String);
-            sqlParameters.Add("@StartDateParam", eventToAdd.StartDate, DbType.DateTime);
-
             try
             {
-                if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
+                if (await _eventService.UpdateEventAsync(eventToAdd, eventId))
                     return Ok();
                 else
-                    return BadRequest($"Failed to update event with ID {eventId}");
+                    return BadRequest($"An error occurred while updating the event with ID {eventId}");
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to update event with ID {eventId}");
+                _logger.LogError(ex, "An error occurred while updating an event.");
+                return BadRequest($"An error occurred while updating the event with ID {eventId}");
             }
         }
 
         [HttpDelete("{eventId}")]
-        public async Task<IActionResult> DeleteEventAsync(int eventId) {
-            string sql = @"
-                DELETE FROM EventBookingSchema.Events
-                WHERE EventId = @EventIdParam";
-
-            DynamicParameters sqlParameters = new();
-            sqlParameters.Add("@EventIdParam", eventId, DbType.Int32);
-
+        public async Task<IActionResult> DeleteEventAsync(int eventId)
+        {
             try
             {
-                if (await _dapper.ExecuteSqlWithParametersAsync(sql, sqlParameters))
+                if (await _eventService.DeleteEventAsync(eventId))
                     return Ok();
                 else
-                    return BadRequest($"Failed to delete event with ID {eventId}");
+                    return BadRequest($"An error occurred while deleting the event with ID {eventId}");
             }
-            catch (SqlException)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal Server Error");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to delete event with ID {eventId}");
+                _logger.LogError(ex, "An error occurred while deleting a user.");
+                return BadRequest($"An error occurred while deleting the event with ID {eventId}");
             }
         }
 

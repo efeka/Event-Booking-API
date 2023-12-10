@@ -18,10 +18,13 @@ public class Program
 
         // Dependency injection for services
         builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IEventService, EventService>();
         // Dependency injection for logger
         builder.Services.AddLogging(configure => configure.AddConsole());
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<UserController>();
+        builder.Services.AddScoped<EventService>();
+        builder.Services.AddScoped<EventController>();
 
         // Add logging services with a default configuration
         builder.Services.AddLogging();

@@ -2,7 +2,6 @@ using System.Data;
 using Dapper;
 using EventBookingAPI.Data;
 using EventBookingAPI.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.SqlClient;
 
 namespace EventBookingAPI.Services
@@ -35,7 +34,7 @@ namespace EventBookingAPI.Services
             }
         }
 
-        public async Task<User> GetUserAsync(int userId)
+        public async Task<User> GetUserByIdAsync(int userId)
         {
             string sql = @"
                 SELECT *

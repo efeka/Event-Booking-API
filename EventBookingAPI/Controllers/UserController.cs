@@ -1,10 +1,6 @@
-using System.Data;
-using Dapper;
-using EventBookingAPI.Data;
 using EventBookingAPI.Models;
 using EventBookingAPI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 
 namespace EventBookingAPI.Controllers
 {
@@ -37,11 +33,11 @@ namespace EventBookingAPI.Controllers
         }
 
         [HttpGet("{userId}")]
-        public async Task<ActionResult<User>> GetUserAsync(int userId)
+        public async Task<ActionResult<User>> GetUserByIdAsync(int userId)
         {
             try
             {
-                User user = await _userService.GetUserAsync(userId);
+                User user = await _userService.GetUserByIdAsync(userId);
                 return Ok(user);
             }
             catch (Exception ex)
