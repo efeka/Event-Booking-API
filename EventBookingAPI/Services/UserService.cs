@@ -118,8 +118,7 @@ namespace EventBookingAPI.Services
         public async Task<bool> DeleteUserAsync(int userId)
         {
             string sql = @"
-                DELETE FROM EventBookingSchema.Users
-                WHERE UserId = @UserIdParam";
+                EXEC EventBookingSchema.spUsers_Delete @UserId = @UserIdParam";
 
             DynamicParameters sqlParameters = new();
             sqlParameters.Add("@UserIdParam", userId, DbType.Int32);

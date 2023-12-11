@@ -14,6 +14,7 @@ public class Program
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IEventService, EventService>();
         builder.Services.AddScoped<IRoleService, RoleService>();
+        builder.Services.AddScoped<IEventUserService, EventUserService>();
         // Dependency injection for logger
         builder.Services.AddLogging(configure => configure.AddConsole());
         builder.Services.AddScoped<UserService>();
@@ -22,6 +23,8 @@ public class Program
         builder.Services.AddScoped<EventController>();
         builder.Services.AddScoped<RoleService>();
         builder.Services.AddScoped<RoleController>();
+        builder.Services.AddScoped<EventUserService>();
+        builder.Services.AddScoped<EventUserController>();
 
         // Add logging services with a default configuration
         builder.Services.AddLogging();
