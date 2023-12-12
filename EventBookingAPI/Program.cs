@@ -1,4 +1,5 @@
 using EventBookingAPI.Controllers;
+using EventBookingAPI.Data;
 using EventBookingAPI.Services;
 
 public class Program
@@ -7,27 +8,30 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
+        // Add services to the container
         builder.Services.AddControllers();
 
-        // Dependency injection for services
+        #region Dependency Injections
+
+        // Register the data context for Dapper
+        builder.Services.AddScoped<DataContextDapper>();
+
+        // Register services and their implementations
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IEventService, EventService>();
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<IEventUserService, EventUserService>();
-        // Dependency injection for logger
+
         builder.Services.AddLogging(configure => configure.AddConsole());
         builder.Services.AddScoped<UserService>();
-        builder.Services.AddScoped<UserController>();
         builder.Services.AddScoped<EventService>();
-        builder.Services.AddScoped<EventController>();
         builder.Services.AddScoped<RoleService>();
-        builder.Services.AddScoped<RoleController>();
         builder.Services.AddScoped<EventUserService>();
-        builder.Services.AddScoped<EventUserController>();
 
-        // Add logging services with a default configuration
+        // Register a console logger for logging
         builder.Services.AddLogging();
+
+        #endregion
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();

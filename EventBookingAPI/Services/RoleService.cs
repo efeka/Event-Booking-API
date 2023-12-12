@@ -12,9 +12,9 @@ namespace EventBookingAPI.Services
         private readonly DataContextDapper _dapper;
         private readonly ILogger<RoleService> _logger;
 
-        public RoleService(IConfiguration config, ILogger<RoleService> logger)
+        public RoleService(DataContextDapper dapper, ILogger<RoleService> logger)
         {
-            _dapper = new(config);
+            _dapper = dapper;
             _logger = logger;
         }
 
