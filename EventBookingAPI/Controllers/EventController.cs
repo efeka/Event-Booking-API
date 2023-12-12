@@ -28,7 +28,21 @@ namespace EventBookingAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while getting events.");
-                return NotFound("Could not retrieve events");
+                return NotFound("Could not retrieve events.");
+            }
+        }
+        [HttpGet("/Events/Current")]
+        public async Task<ActionResult<IEnumerable<Event>>> GetCurrentEventsAsync()
+        {
+            try
+            {
+                IEnumerable<Event> events = await _eventService.GetCurrentEventsAsync();
+                return Ok(events);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while getting current events.");
+                return NotFound("Could not retrieve current events.");
             }
         }
 

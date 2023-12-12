@@ -35,6 +35,25 @@ namespace EventBookingAPI.Services
             }
         }
 
+        public async Task<IEnumerable<Event>> GetCurrentEventsAsync()
+        {
+            string sql = @"
+                SELECT *
+                FROM EventBookingSchema.Events
+                WHERE EndDate > GETDATE()";
+
+            try
+            {
+                IEnumerable<Event> events = await _dapper.LoadDataAsync<Event>(sql);
+                return events;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "An error occurred while getting current events.");
+                throw new ApplicationException("An error occurred while getting current events.");
+            }
+        }
+
         public async Task<Event> GetEventByIdAsync(int eventId)
         {
             string sql = @"
@@ -64,13 +83,15 @@ namespace EventBookingAPI.Services
                     @OrganizerId = @OrganizerIdParam,
                     @Title = @TitleParam,
                     @Description = @DescriptionParam,
-                    @StartDate = @StartDateParam";
+                    @StartDate = @StartDateParam,
+                    @EndDate = @EndDateParam";
 
             DynamicParameters sqlParameters = new();
             sqlParameters.Add("@OrganizerIdParam", eventToAdd.OrganizerId, DbType.Int32);
             sqlParameters.Add("@TitleParam", eventToAdd.Title, DbType.String);
             sqlParameters.Add("@DescriptionParam", eventToAdd.Description, DbType.String);
             sqlParameters.Add("@StartDateParam", eventToAdd.StartDate, DbType.DateTime);
+            sqlParameters.Add("@EndDateParam", eventToAdd.EndDate, DbType.DateTime);
 
             try
             {
@@ -91,7 +112,8 @@ namespace EventBookingAPI.Services
                     @OrganizerId = @OrganizerIdParam,
                     @Title = @TitleParam,
                     @Description = @DescriptionParam,
-                    @StartDate = @StartDateParam";
+                    @StartDate = @StartDateParam,
+                    @EndDate = @EndDateParam";
 
             DynamicParameters sqlParameters = new();
             sqlParameters.Add("@EventIdParam", eventId, DbType.Int32);
@@ -99,6 +121,7 @@ namespace EventBookingAPI.Services
             sqlParameters.Add("@TitleParam", eventToAdd.Title, DbType.String);
             sqlParameters.Add("@DescriptionParam", eventToAdd.Description, DbType.String);
             sqlParameters.Add("@StartDateParam", eventToAdd.StartDate, DbType.DateTime);
+            sqlParameters.Add("@EndDateParam", eventToAdd.EndDate, DbType.DateTime);
 
             try
             {
