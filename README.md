@@ -23,3 +23,7 @@ The API supports CRUD operations through HTTP requests, with role-based access c
 - **Swagger/OpenAPI:** Documentation and testing of API endpoints.
 - **Dapper:** Micro ORM for data access.
 - **C#:** Primary programming language.
+
+## Database Creation
+
+To set up the required database for this project, run the Database/DbScript.sql file as a query on an SQL Server management tool.
