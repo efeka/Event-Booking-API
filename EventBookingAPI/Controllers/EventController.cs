@@ -61,6 +61,21 @@ namespace EventBookingAPI.Controllers
             }
         }
 
+        [HttpGet("/Events/{search}")]
+        public async Task<ActionResult<IEnumerable<Event>>> GetEventsBySearch(string search)
+        {
+            try
+            {
+                IEnumerable<Event> events = await _eventService.GetEventsBySearchAsync(search);
+                return Ok(events);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while searching for an event.");
+                return NotFound($"An error occurred while searching for an event with search param: {search}");
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> AddEventAsync(EventToAddDto eventToAdd)
         {
@@ -111,6 +126,5 @@ namespace EventBookingAPI.Controllers
                 return BadRequest($"An error occurred while deleting the event with ID {eventId}");
             }
         }
-
     }
 }

@@ -76,6 +76,29 @@ namespace EventBookingAPI.Services
             }
         }
 
+        public async Task<IEnumerable<Event>> GetEventsBySearchAsync(string search)
+        {
+            string sql = @"
+                SELECT *
+                FROM EventBookingSchema.Events
+                WHERE Title LIKE '%' + @SearchParam + '%' OR 
+                Description LIKE '%' + @SearchParam + '%'";
+
+            DynamicParameters sqlParameters = new();
+            sqlParameters.Add("@SearchParam", search, DbType.String);
+
+            try
+            {
+                IEnumerable<Event> events = await _dapper.LoadDataWithParametersAsync<Event>(sql, sqlParameters);
+                return events;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "An error occurred while searching for an event.");
+                throw new ApplicationException($"An error occurred while searching for an event with search param: {search}");
+            }
+        }
+
         public async Task<bool> AddEventAsync(EventToAddDto eventToAdd)
         {
             string sql = @"
